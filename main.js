@@ -1,7 +1,7 @@
 const fs = require('fs');
 
 const go = fs.readFileSync('./env', 'utf-8').split(/\r?\n/);
-console.log(go);
+//console.log(go);
 go.forEach((line) => {
     if(line.match(/^#/)){
         return
@@ -9,11 +9,13 @@ go.forEach((line) => {
     }
     const match = /(?<variable>.*)=(?<value>.*)/.exec(line)
     if (match){
-        console.log(match.groups.variable, '=' , match.groups.value)
+        console.log(JSON.stringify(match.groups.variable, ':' , match.groups.value))
     }
 }
 
 )
+//console.log(JSON.stringify(tresul))
+
 
 
 
@@ -26,7 +28,7 @@ go.forEach((line) => {
 /*
 const { readFileSync } = require('fs')
 
-const file = readFileSync('env', 'utf8').split(/[\n\r]/)
+const file = readFileSync('env', 'utf8').split(/[\r?\n]/)
 const result = {}
 
 let prev = {}
