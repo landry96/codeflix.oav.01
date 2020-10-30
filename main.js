@@ -1,56 +1,52 @@
-const fs = require('fs');
+const fs = require('fs')
+const path = require('path')
 
-const go = fs.readFileSync('./env', 'utf-8').split(/\r?\n/);
-//console.log(go);
-go.forEach((line) => {
-    if(line.match(/^#/)){
-        return
+const { parseEnv, parseIni } = require('./parse')
 
-    }
-    const match = /(?<variable>.*)=(?<value>.*)/.exec(line)
-    if (match){
-        console.log(JSON.stringify(match.groups.variable, ':' , match.groups.value))
-    }
+if (process.argv.length !== 3) {
+  console.log(`usage: node main.js <CONFIG_FILENAME>`)
+  process.exit(1)
 }
 
-)
-//console.log(JSON.stringify(tresul))
+const filename = process.argv[2]
+const result = filename.match(/\.(.*)$/)
+if (result === null) {
+  console.log('error :: check your configuration filetype')
+  process.exit(2)
+}
 
+const extension = result[1]
 
+const handle_configuration = {
+  env: parseEnv,
+  ini: parseIni,
+}
 
+if (!handle_configuration[extension]) {
+  console.log(`error :: extension ${extension} not yet supported`)
+  process.exit(3)
+}
 
-//const ini = require('ini');
-//const config = ini.parse(fs.readFileSync('./php.ini', 'utf-8'));
-//console.log(config);
+if (!fs.existsSync(filename)) {
+  console.log(`error :: file ${filename} doesn't exist`)
+  process.exit(4)
+}
 
+const str = fs.readFileSync(filename, 'utf-8')
+const obj = handle_configuration[extension](str)
 
+if (obj === -1) {
+  console.log(`error :: something bad happends with file ${filename}`)
+  process.exit(5)
+}
 
-/*
-const { readFileSync } = require('fs')
+let current_date = new Date()
+  .toISOString()
+  .replace(/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+).*/, '$1$2$3$4$5$6')
 
-const file = readFileSync('env', 'utf8').split(/[\r?\n]/)
-const result = {}
+const basename = path.basename(filename, `.${extension}`)
+const output_name = path.join('data', `${basename}.${current_date}.json`)
 
-let prev = {}
-let preKey
+fs.writeFileSync(output_name, JSON.stringify(obj, null, 2))
 
-file.forEach(line => {
-    const key = line.split('=')[0]
-    const value = line.split('=')[1]
-    const _ = {}
-
-    if (!value) {
-        prev[preKey] += key
-        result[preKey] = prev[preKey]
-    } else {
-        result[key] = value
-    }
-
-    _[key] = value
-    prev = _
-    preKey = key
-})
-
-console.log(JSON.stringify(result))
-
-*/
+console.log(`File ${output_name} has been successfully created! 🤘`)
